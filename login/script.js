@@ -1,5 +1,5 @@
 // Retro Future Login Form
-class RetroFutureLoginForm extends FormUtils.LoginFormBase {
+class RetroFutureLoginForm
     constructor() {
         super({
             submitButtonSelector: '.retro-button',
