@@ -1,37 +1,25 @@
-/* welcome.js — manajemen sesi login */
+document.addEventListener("DOMContentLoaded", function () {
 
-function getUser() {
-    try { return JSON.parse(localStorage.getItem('quantix_user')); }
-    catch(e) { return null; }
-}
+    function goLogin() {
+        window.location.href = "login/index.html";
+    }
 
-function goLogin() {
-    window.location.href = 'login/index.html';
-}
+    function logout() {
+        localStorage.removeItem("username");
+        location.reload();
+    }
 
-function doLogout() {
-    localStorage.removeItem('quantix_user');
-    updateAuthUI();
-}
-
-function updateAuthUI() {
-    const user = getUser();
-    const authArea = document.getElementById('authArea');
-    if (!authArea) return;
+    const user = localStorage.getItem("username");
 
     if (user) {
-        authArea.innerHTML = `
-            <div class="auth-user-row">
-                <div class="auth-avatar">${user.nama ? user.nama.charAt(0).toUpperCase() : 'U'}</div>
-                <span class="auth-username">${user.nama || user.email}</span>
-                <button onclick="doLogout()" class="btn btn-ghost btn-sm">Keluar</button>
-            </div>`;
-    } else {
-        authArea.innerHTML = `
-            <button onclick="goLogin()" class="btn btn-primary">
-                Masuk
-            </button>`;
-    }
-}
+        document.getElementById("userInfo").innerText = "Halo, " + user;
 
-document.addEventListener('DOMContentLoaded', updateAuthUI);
+        document.getElementById("authArea").innerHTML = `
+            <button onclick="logout()" class="nav-cta">Logout</button>
+        `;
+    }
+
+    window.goLogin = goLogin;
+    window.logout = logout;
+
+});
