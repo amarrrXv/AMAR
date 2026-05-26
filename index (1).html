@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantix — Analitik Produk Real-Time</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --deep-space:#1E1E24;--surface-1:#26262D;--surface-2:#2E2E36;--surface-3:#36363F;
+            --accent:#FF6B6B;--accent-light:#FF9B9B;--accent-glow:rgba(255,107,107,0.35);
+            --accent-soft:rgba(255,107,107,0.08);--accent-border:rgba(255,107,107,0.25);
+            --text-primary:#EEEEF0;--text-secondary:#8A8B9E;--text-muted:#55566A;
+            --border-subtle:rgba(255,255,255,0.06);--green:#22C55E;--amber:#F59E0B;
+            --rose:#F43F5E;--radius:16px;--radius-sm:10px;--radius-xs:6px;--radius-pill:100px;
+        }
+        html{scroll-behavior:smooth}
+        body{
+            font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
+            background-color:var(--deep-space);color:var(--text-primary);
+            line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+        }
+        body::after{
+            content:'';position:fixed;inset:0;
+            background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events:none;z-index:9999;opacity:0.5;
+        }
+        a{text-decoration:none;color:inherit}
+        .container{width:100%;max-width:1200px;margin:0 auto;padding:0 24px}
+
+        /* ===== NAVBAR ===== */
+        .navbar{
+            position:fixed;top:0;left:0;width:100%;z-index:1000;
+            padding:20px 0;transition:all 0.4s ease;
+        }
+        .navbar.scrolled{
+            background:rgba(30,30,36,0.85);backdrop-filter:blur(24px);
+            -webkit-backdrop-filter:blur(24px);padding:14px 0;
+            border-bottom:1px solid var(--border-subtle);
+        }
+        .navbar .container{display:flex;align-items:center;justify-content:space-between}
+        .nav-brand{font-size:20px;font-weight:800;letter-spacing:-0.04em;display:flex;align-items:center;gap:10px}
+        .brand-icon{
+            width:30px;height:30px;background:var(--accent);border-radius:8px;
+            display:grid;place-items:center;font-size:14px;font-weight:800;color:#fff;
+            box-shadow:0 0 24px var(--accent-glow);
+        }
+        .nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+        .nav-links a{font-size:13.5px;font-weight:500;color:var(--text-muted);transition:color 0.3s;letter-spacing:-0.01em}
+        .nav-links a:hover{color:var(--text-primary)}
+        .nav-mobile-actions{display:none}
+        .nav-actions{display:flex;align-items:center;gap:10px}
+
+        /* Auth area */
+        .auth-user-row{
+            display:flex;align-items:center;gap:10px;
+            background:var(--surface-1);border:1px solid var(--border-subtle);
+            border-radius:var(--radius-pill);padding:5px 14px 5px 6px;
+        }
+        .auth-avatar{
+            width:28px;height:28px;border-radius:50%;background:var(--accent);
+            display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff;
+            box-shadow:0 0 12px var(--accent-glow);flex-shrink:0;
+        }
+        .auth-username{font-size:13px;font-weight:600;color:var(--text-primary)}
+        .btn-sm{padding:6px 14px;font-size:12px}
+
+        /* Login modal overlay */
+        .modal-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,0.7);
+            backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+            z-index:10000;display:none;align-items:center;justify-content:center;
+            padding:24px;
+        }
+        .modal-overlay.open{display:flex}
+        .modal-card{
+            background:var(--surface-1);border:1px solid var(--border-subtle);
+            border-radius:24px;padding:44px 36px;width:100%;max-width:400px;
+            position:relative;box-shadow:0 40px 80px rgba(0,0,0,0.6);
+            animation:modalIn 0.3s ease;
+        }
+        @keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:none}}
+        .modal-card::before{
+            content:'';position:absolute;top:0;left:20%;right:20%;height:1px;
+            background:linear-gradient(90deg,transparent,var(--accent),transparent);
+        }
+        .modal-close{
+            position:absolute;top:16px;right:16px;
+            width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);
+            border:1px solid var(--border-subtle);cursor:pointer;
+            display:grid;place-items:center;color:var(--text-muted);
+            font-size:18px;line-height:1;transition:all 0.2s;
+        }
+        .modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text-primary)}
+        .modal-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;letter-spacing:-0.04em;margin-bottom:28px}
+        .modal-title{font-size:22px;font-weight:800;letter-spacing:-0.04em;margin-bottom:6px}
+        .modal-subtitle{font-size:13.5px;color:var(--text-muted);margin-bottom:28px}
+        .form-group{margin-bottom:16px}
+        label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:7px;letter-spacing:-0.01em}
+        input[type="text"],input[type="email"],input[type="password"]{
+            width:100%;background:var(--surface-2);border:1px solid var(--border-subtle);
+            border-radius:12px;padding:12px 15px;font-family:inherit;font-size:14px;
+            color:var(--text-primary);outline:none;transition:border-color 0.3s,box-shadow 0.3s;
+        }
+        input:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-soft)}
+        input::placeholder{color:var(--text-muted)}
+        .btn-modal-login{
+            width:100%;margin-top:6px;padding:13px;
+            background:var(--accent);color:#fff;border:none;
+            border-radius:var(--radius-pill);font-family:inherit;
+            font-size:14px;font-weight:700;cursor:pointer;
+            transition:all 0.3s;box-shadow:0 0 24px var(--accent-glow);
+        }
+        .btn-modal-login:hover{background:#FF8585;transform:translateY(-1px)}
+        .error-msg{
+            background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);
+            border-radius:10px;padding:11px 14px;font-size:12.5px;
+            color:var(--rose);margin-bottom:16px;display:none;
+        }
+        .success-msg{
+            background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);
+            border-radius:10px;padding:11px 14px;font-size:12.5px;
+            color:var(--green);margin-bottom:16px;display:none;
+        }
+        .demo-hint{
+            background:var(--surface-2);border:1px solid var(--border-subtle);
+            border-radius:10px;padding:11px 14px;font-size:11.5px;
+            color:var(--text-muted);margin-top:18px;
+            font-family:'JetBrains Mono',monospace;line-height:1.7;
+        }
+        .demo-hint strong{color:var(--text-secondary);font-weight:500}
+
+        /* BUTTONS */
+        .btn{
+            display:inline-flex;align-items:center;justify-content:center;gap:8px;
+            padding:10px 22px;border-radius:var(--radius-pill);font-family:inherit;
+            font-size:13.5px;font-weight:600;cursor:pointer;border:none;
+            transition:all 0.3s ease;letter-spacing:-0.01em;
+        }
+        .btn-ghost{background:transparent;color:var(--text-secondary)}
+        .btn-ghost:hover{color:var(--text-primary)}
+        .btn-primary{
+            background:var(--accent);color:#fff;
+            box-shadow:0 0 24px var(--accent-glow),0 1px 0 rgba(255,255,255,0.1) inset;
+        }
+        .btn-primary:hover{background:#FF8585;box-shadow:0 0 36px var(--accent-glow);transform:translateY(-1px)}
+        .btn-secondary{background:rgba(255,255,255,0.05);color:var(--text-primary);border:1px solid var(--border-subtle)}
+        .btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1)}
+        .btn-lg{padding:14px 32px;font-size:14.5px}
+        .btn-primary .btn-arrow{transition:transform 0.3s}
+        .btn-primary:hover .btn-arrow{transform:translateX(3px)}
+        .nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;z-index:1001}
+        .nav-toggle span{width:20px;height:2px;background:var(--text-primary);border-radius:2px;transition:all 0.3s}
+        .nav-toggle.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+        .nav-toggle.active span:nth-child(2){opacity:0}
+        .nav-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+        /* ===== HERO ===== */
+        .hero{position:relative;padding:180px 24px 120px;overflow:hidden}
+        .hero::before{
+            content:'';position:absolute;top:10%;left:50%;transform:translateX(-50%);
+            width:1000px;height:700px;
+            background:radial-gradient(circle at center,rgba(255,107,107,0.12) 0%,rgba(255,107,107,0.04) 35%,transparent 55%);
+            pointer-events:none;
+        }
+        .hero::after{
+            content:'';position:absolute;inset:0;
+            background-image:linear-gradient(rgba(255,255,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.035) 1px,transparent 1px);
+            background-size:80px 80px;
+            mask-image:radial-gradient(ellipse at 50% 30%,black 30%,transparent 75%);
+            -webkit-mask-image:radial-gradient(ellipse at 50% 30%,black 30%,transparent 75%);
+            pointer-events:none;
+        }
+        .hero-inner{
+            position:relative;z-index:1;display:grid;
+            grid-template-columns:1fr 1fr;gap:60px;align-items:center;
+            max-width:1200px;margin:0 auto;
+        }
+        .hero-content{max-width:560px}
+        .hero-badge{
+            display:inline-flex;align-items:center;gap:8px;
+            padding:5px 16px 5px 7px;background:var(--accent-soft);
+            border:1px solid rgba(255,107,107,0.2);border-radius:var(--radius-pill);
+            font-size:12.5px;font-weight:600;color:var(--accent-light);margin-bottom:28px;
+        }
+        .badge-dot{
+            width:7px;height:7px;background:var(--green);border-radius:50%;
+            box-shadow:0 0 8px rgba(34,197,94,0.6);animation:dotPulse 2s ease-in-out infinite;
+        }
+        @keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+        .hero h1{font-size:clamp(40px,5vw,62px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-bottom:20px}
+        .gradient-text{
+            background:linear-gradient(135deg,#FFD4D4 0%,var(--accent) 60%,#FF9B9B 100%);
+            -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+        }
+        .hero-desc{font-size:16.5px;color:var(--text-secondary);line-height:1.7;margin-bottom:36px;max-width:460px}
+        .hero-cta{display:flex;align-items:center;gap:14px;margin-bottom:48px}
+        .trusted-row{display:flex;flex-direction:column;gap:14px}
+        .trusted-label{font-size:11.5px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em}
+        .trusted-logos{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+        .trusted-logo{
+            opacity:0.25;transition:opacity 0.3s;font-size:14px;font-weight:700;
+            color:var(--text-secondary);letter-spacing:-0.02em;display:flex;align-items:center;gap:6px;
+        }
+        .trusted-logo:hover{opacity:0.5}
+        .trusted-logo .t-icon{width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,0.15)}
+
+        /* Hero mockup */
+        .hero-mockup{position:relative}
+        .mockup-window{
+            background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:14px;
+            overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.03) inset;
+            transform:perspective(1200px) rotateY(-4deg) rotateX(2deg);transition:transform 0.5s ease;
+        }
+        .mockup-window:hover{transform:perspective(1200px) rotateY(-1deg) rotateX(1deg)}
+        .mockup-toolbar{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
+        .mockup-dot{width:10px;height:10px;border-radius:50%}
+        .mockup-dot:nth-child(1){background:var(--rose);opacity:0.7}
+        .mockup-dot:nth-child(2){background:var(--amber);opacity:0.7}
+        .mockup-dot:nth-child(3){background:var(--green);opacity:0.7}
+        .mockup-body{padding:20px}
+        .mockup-metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+        .mockup-metric{background:var(--surface-2);border-radius:10px;padding:14px;border:1px solid var(--border-subtle)}
+        .mockup-metric .mm-label{font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em}
+        .mockup-metric .mm-value{font-size:20px;font-weight:800;letter-spacing:-0.04em}
+        .mockup-metric .mm-change{font-size:10px;font-weight:600;color:var(--green);margin-top:4px}
+        .mockup-chart{background:var(--surface-2);border-radius:10px;padding:16px;border:1px solid var(--border-subtle);height:120px;position:relative;overflow:hidden}
+        .mockup-chart-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em}
+        .chart-line{position:absolute;bottom:16px;left:16px;right:16px;height:60px}
+        .chart-line svg{width:100%;height:100%}
+
+        /* ===== SECTIONS ===== */
+        .section{padding:120px 0;position:relative}
+        .section-label{
+            display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;
+            color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;
+            font-family:'JetBrains Mono',monospace;
+        }
+        .section-label::before{content:'';width:18px;height:2px;background:var(--accent);border-radius:2px}
+        .section-title{font-size:clamp(30px,4vw,46px);font-weight:800;letter-spacing:-0.04em;line-height:1.1;margin-bottom:14px}
+        .section-desc{font-size:16px;color:var(--text-secondary);max-width:480px;line-height:1.7}
+        .section-header{text-align:center;margin-bottom:64px}
+        .section-header .section-desc{margin:0 auto}
+
+        /* ===== TABBED FEATURES ===== */
+        .features-section{border-top:1px solid var(--border-subtle)}
+        .feature-tabs{
+            display:flex;justify-content:center;gap:4px;margin-bottom:56px;
+            background:var(--surface-1);border:1px solid var(--border-subtle);
+            border-radius:var(--radius-pill);padding:4px;width:fit-content;
+            margin-left:auto;margin-right:auto;
+        }
+        .feature-tab{
+            padding:10px 24px;border-radius:var(--radius-pill);font-family:inherit;
+            font-size:13.5px;font-weight:600;color:var(--text-muted);background:transparent;
+            border:none;cursor:pointer;transition:all 0.3s ease;white-space:nowrap;letter-spacing:-0.01em;
+        }
+        .feature-tab:hover{color:var(--text-secondary)}
+        .feature-tab.active{background:var(--accent);color:#fff;box-shadow:0 0 20px var(--accent-glow)}
+        .feature-panels{position:relative}
+        .feature-panel{display:none;grid-template-columns:1fr 1.2fr;gap:64px;align-items:center;animation:panelIn 0.45s ease forwards}
+        .feature-panel.active{display:grid}
+        @keyframes panelIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .feature-text{max-width:440px}
+        .feature-text .feat-icon{
+            width:48px;height:48px;background:var(--accent-soft);border:1px solid rgba(255,107,107,0.10);
+            border-radius:12px;display:grid;place-items:center;margin-bottom:24px;color:var(--accent);
+        }
+        .feature-text h3{font-size:28px;font-weight:800;letter-spacing:-0.04em;margin-bottom:14px;line-height:1.15}
+        .feature-text p{font-size:15px;color:var(--text-secondary);line-height:1.75;margin-bottom:28px}
+        .feature-bullets{list-style:none;display:flex;flex-direction:column;gap:12px}
+        .feature-bullets li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-secondary)}
+        .feature-bullets li svg{color:var(--accent);flex-shrink:0}
+        .feature-visual{
+            background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:16px;
+            overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;
+        }
+        .fv-toolbar{display:flex;align-items:center;gap:6px;padding:11px 16px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.02)}
+        .fv-dot{width:8px;height:8px;border-radius:50%}
+        .fv-dot:nth-child(1){background:var(--rose);opacity:0.6}
+        .fv-dot:nth-child(2){background:var(--amber);opacity:0.6}
+        .fv-dot:nth-child(3){background:var(--green);opacity:0.6}
+        .fv-body{padding:24px}
+        .dash-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+        .dash-metric{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:14px}
+        .dash-metric .dm-label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+        .dash-metric .dm-val{font-size:22px;font-weight:800;letter-spacing:-0.04em;margin-bottom:4px}
+        .dash-metric .dm-change{font-size:10px;font-weight:600}
+        .dm-change.up{color:var(--green)}.dm-change.down{color:var(--rose)}
+        .dash-chart-area{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:16px;height:140px;position:relative}
+        .dash-chart-area .dca-title{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+        .dash-chart-area svg{width:100%;height:80px}
+        .funnel-stages{display:flex;flex-direction:column;gap:6px}
+        .funnel-stage{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-xs)}
+        .funnel-bar-wrap{flex:1}
+        .funnel-bar-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+        .funnel-bar-label span:first-child{color:var(--text-secondary)}
+        .funnel-bar-label span:last-child{font-family:'JetBrains Mono',monospace;color:var(--text-muted);font-size:10.5px}
+        .funnel-track{height:6px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden}
+        .funnel-fill{height:100%;border-radius:6px;background:var(--accent);transition:width 0.8s cubic-bezier(0.4,0,0.2,1)}
+        .funnel-fill.green{background:var(--green)}.funnel-fill.amber{background:var(--amber)}
+        .funnel-drop{font-size:10px;font-weight:600;color:var(--rose);font-family:'JetBrains Mono',monospace;width:44px;text-align:right;flex-shrink:0}
+        .code-block{background:var(--deep-space);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);overflow-x:auto}
+        .code-block .c-key{color:var(--accent-light)}.code-block .c-str{color:var(--green)}.code-block .c-fn{color:var(--amber)}.code-block .c-comment{color:var(--text-muted)}.code-block .c-num{color:var(--rose)}
+        .code-output{margin-top:12px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:14px 16px}
+        .code-output .co-label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+        .code-output .co-result{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace}
+        .co-result .pulse-ring{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px rgba(34,197,94,0.5)}
+        .replay-ui{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);overflow:hidden}
+        .replay-header{padding:10px 14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between}
+        .replay-header .rh-left{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary)}
+        .replay-header .rh-left .live-dot{width:6px;height:6px;background:var(--rose);border-radius:50%;box-shadow:0 0 6px rgba(244,63,94,0.5);animation:dotPulse 1.5s ease-in-out infinite}
+        .replay-header .rh-time{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .replay-viewport{padding:20px;min-height:160px;position:relative}
+        .replay-page{background:#28282f;border-radius:6px;padding:14px;border:1px solid var(--border-subtle)}
+        .rp-nav{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;margin-bottom:12px;width:60%}
+        .rp-hero-block{height:10px;background:rgba(255,255,255,0.08);border-radius:3px;margin-bottom:6px;width:80%}
+        .rp-hero-block:nth-child(3){width:50%;margin-bottom:12px}
+        .rp-btn-block{display:inline-block;height:8px;width:48px;background:var(--accent);opacity:0.6;border-radius:4px;margin-bottom:16px}
+        .rp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+        .rp-card{height:28px;background:rgba(255,255,255,0.04);border-radius:4px;border:1px solid var(--border-subtle)}
+        .replay-cursor{position:absolute;width:12px;height:12px;border-left:2px solid var(--accent);border-top:2px solid var(--accent);transform:rotate(-45deg);filter:drop-shadow(0 0 6px rgba(255,107,107,0.4));animation:cursorMove 4s ease-in-out infinite}
+        @keyframes cursorMove{0%{top:60px;left:40px}25%{top:80px;left:140px}50%{top:110px;left:100px}75%{top:70px;left:180px}100%{top:60px;left:40px}}
+        .replay-timeline{padding:10px 14px;border-top:1px solid var(--border-subtle);display:flex;align-items:center;gap:10px}
+        .replay-timeline .rt-play{width:20px;height:20px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex-shrink:0}
+        .rt-track{flex:1;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+        .rt-progress{height:100%;width:45%;background:var(--accent);border-radius:3px}
+        .replay-events{margin-top:12px;display:flex;gap:8px}
+        .replay-event-tag{padding:4px 10px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:5px}
+        .replay-event-tag .re-dot{width:5px;height:5px;border-radius:50%}
+        .privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .privacy-card{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:18px}
+        .privacy-card .pc-icon{width:32px;height:32px;border-radius:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.15);display:grid;place-items:center;margin-bottom:12px;color:var(--green)}
+        .privacy-card h4{font-size:13px;font-weight:700;margin-bottom:4px;letter-spacing:-0.02em}
+        .privacy-card p{font-size:11.5px;color:var(--text-muted);line-height:1.55}
+
+        /* ===== STATS ===== */
+        .stats-strip{padding:80px 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)}
+        .stats-grid{display:flex;justify-content:space-between}
+        .stat-item{text-align:left;flex:1}
+        .stat-item+.stat-item{border-left:1px solid var(--border-subtle);padding-left:40px}
+        .stat-number{font-size:48px;font-weight:800;letter-spacing:-0.04em;line-height:1;margin-bottom:6px}
+        .stat-label{font-size:13px;color:var(--text-muted);font-weight:500}
+
+        /* ===== PRICING ===== */
+        .pricing-section{background:linear-gradient(180deg,var(--deep-space) 0%,rgba(255,107,107,0.02) 50%,var(--deep-space) 100%)}
+        .pricing-toggle-wrap{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:56px}
+        .pricing-toggle-label{font-size:14px;font-weight:500;color:var(--text-muted);transition:color 0.3s}
+        .pricing-toggle-label.active{color:var(--text-primary)}
+        .pricing-toggle{position:relative;width:48px;height:26px;background:rgba(255,255,255,0.08);border-radius:100px;cursor:pointer;border:1px solid var(--border-subtle)}
+        .pricing-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--accent);border-radius:50%;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px var(--accent-glow)}
+        .pricing-toggle.annual::after{transform:translateX(22px)}
+        .pricing-save{font-size:11px;font-weight:700;color:var(--green);background:rgba(34,197,94,0.1);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(34,197,94,0.2)}
+        .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:center}
+        .pricing-card{background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:20px;padding:40px 32px;position:relative;transition:all 0.4s}
+        .pricing-card:hover{border-color:rgba(255,255,255,0.08)}
+        .pricing-card.featured{transform:scale(1.05);border-color:var(--accent-border);z-index:2;box-shadow:0 0 80px rgba(255,107,107,0.06),0 24px 48px rgba(0,0,0,0.4)}
+        .pricing-card.featured::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+        .pricing-popular{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.06em;box-shadow:0 0 20px var(--accent-glow)}
+        .pricing-plan-name{font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:20px}
+        .pricing-amount{display:flex;align-items:flex-start;gap:2px;margin-bottom:4px;min-height:56px}
+        .pricing-currency{font-size:18px;font-weight:700;color:var(--text-muted);margin-top:8px}
+        .pricing-value{font-size:52px;font-weight:800;letter-spacing:-0.04em;line-height:1;transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+        .pricing-value.free-label{font-size:44px;letter-spacing:-0.03em}
+        .pricing-value.changing{opacity:0;transform:translateY(-6px)}
+        .pricing-period{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+        .pricing-features{list-style:none;margin-bottom:32px}
+        .pricing-features li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-secondary);padding:7px 0}
+        .pricing-features li svg{flex-shrink:0;color:var(--accent)}
+        .pricing-card .btn{width:100%}
+        .pricing-divider{height:1px;background:var(--border-subtle);margin:24px 0}
+
+        /* ===== SUBSCRIBE ===== */
+        .subscribe-section{padding:100px 0 120px;text-align:center;position:relative;overflow:hidden}
+        .subscribe-section::before{content:'';position:absolute;top:30%;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse at center,rgba(255,107,107,0.06) 0%,transparent 60%);pointer-events:none}
+        .subscribe-section::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);pointer-events:none}
+        .subscribe-inner{position:relative;z-index:1;max-width:520px;margin:0 auto}
+        .subscribe-inner .section-title{font-size:clamp(24px,3.5vw,36px);margin-bottom:12px}
+        .subscribe-inner .section-desc{max-width:380px;margin:0 auto 32px;font-size:15px}
+        .subscribe-input-group{display:flex;gap:0;background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:5px;transition:border-color 0.3s,box-shadow 0.3s}
+        .subscribe-input-group:focus-within{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-soft)}
+        .subscribe-input-group input{flex:1;background:transparent;border:none;padding:14px 18px;font-family:inherit;font-size:15px;color:var(--text-primary);outline:none;min-width:0}
+        .subscribe-input-group input::placeholder{color:var(--text-muted)}
+        .subscribe-input-group .btn{border-radius:12px;padding:12px 28px}
+        .subscribe-meta{margin-top:20px;display:flex;align-items:center;justify-content:center;gap:20px}
+        .subscribe-meta span{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+        .subscribe-meta svg{color:var(--accent);flex-shrink:0}
+
+        /* ===== FOOTER ===== */
+        .footer{border-top:1px solid var(--border-subtle);padding:0}
+        .footer-row-links{display:flex;align-items:center;justify-content:center;gap:32px;padding:28px 0;flex-wrap:wrap;border-bottom:1px solid var(--border-subtle)}
+        .footer-row-links a{font-size:13px;color:var(--text-muted);transition:color 0.3s;letter-spacing:-0.01em}
+        .footer-row-links a:hover{color:var(--text-primary)}
+        .footer-link-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.12);flex-shrink:0}
+        .footer-row-bottom{display:flex;align-items:center;justify-content:space-between;padding:24px 0 28px}
+        .footer-copy{font-size:12.5px;color:var(--text-muted)}
+        .footer-copy a{color:var(--accent);transition:color 0.3s}
+        .footer-copy a:hover{color:var(--accent-light)}
+        .footer-right{display:flex;align-items:center;gap:24px}
+        .footer-legal{display:flex;align-items:center;gap:20px}
+        .footer-legal a{font-size:12.5px;color:var(--text-muted);transition:color 0.3s}
+        .footer-legal a:hover{color:var(--text-primary)}
+        .footer-right .separator{width:1px;height:16px;background:var(--border-subtle)}
+        .footer-socials{display:flex;gap:4px}
+        .footer-socials a{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;color:var(--text-muted);transition:all 0.3s}
+        .footer-socials a:hover{color:var(--text-primary);background:rgba(255,255,255,0.04)}
+
+        /* ===== ANIMATIONS ===== */
+        .fade-up{opacity:0;transform:translateY(28px);transition:opacity 0.7s ease,transform 0.7s ease}
+        .fade-up.visible{opacity:1;transform:translateY(0)}
+
+        /* ===== RESPONSIVE ===== */
+        @media(max-width:1024px){
+            .hero-inner{grid-template-columns:1fr;gap:48px}
+            .hero-mockup{max-width:500px;margin:0 auto}
+            .mockup-window,.mockup-window:hover{transform:none}
+            .feature-panel,.feature-panel.active{grid-template-columns:1fr;gap:40px}
+            .feature-text{max-width:none}
+            .pricing-card.featured{transform:scale(1.02)}
+            .footer-row-bottom{flex-direction:column;gap:20px;text-align:center}
+            .footer-right{justify-content:center}
+        }
+        @media(max-width:768px){
+            .nav-links{
+                position:fixed;top:0;right:-100%;width:280px;height:100dvh;
+                background:rgba(30,30,36,0.98);backdrop-filter:blur(24px);
+                -webkit-backdrop-filter:blur(24px);flex-direction:column;align-items:flex-start;
+                padding:80px 28px 80px;gap:0;border-left:1px solid var(--border-subtle);
+                transition:right 0.35s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;z-index:999;
+            }
+            .nav-links.open{right:0}
+            .nav-links li{width:100%}
+            .nav-links a{display:block;padding:14px 0;font-size:16px;border-bottom:1px solid var(--border-subtle)}
+            .nav-toggle{display:flex}
+            .nav-actions{display:none}
+            .nav-mobile-actions{display:flex;flex-direction:column;gap:10px;padding-top:24px;margin-top:8px}
+            .nav-mobile-actions .btn{width:100%;text-align:center;border-radius:var(--radius-pill);color:var(--text-primary)}
+            .nav-mobile-actions .btn-primary{color:#fff}
+            .nav-mobile-actions a{border-bottom:none!important;padding:10px 22px!important;font-size:14px!important}
+            .hero{padding:140px 24px 80px}
+            .hero-cta{flex-direction:column;align-items:stretch}
+            .feature-tabs{overflow-x:auto;justify-content:flex-start;width:100%;border-radius:var(--radius-sm);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+            .feature-tabs::-webkit-scrollbar{display:none}
+            .feature-tab{padding:10px 18px;font-size:12.5px}
+            .dash-metrics{grid-template-columns:1fr}
+            .privacy-grid{grid-template-columns:1fr}
+            .stats-grid{flex-wrap:wrap;gap:32px}
+            .stat-item{flex:1 1 40%;min-width:140px}
+            .stat-item+.stat-item{border-left:none;padding-left:0}
+            .stat-number{font-size:36px}
+            .pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto}
+            .pricing-card.featured{transform:scale(1)}
+            .subscribe-input-group{flex-direction:column;border-radius:var(--radius-sm)}
+            .subscribe-input-group .btn{width:100%;border-radius:var(--radius-sm)}
+            .subscribe-meta{flex-direction:column;gap:8px}
+            .footer-row-links{gap:20px}
+            .section{padding:80px 0}
+        }
+        @media(max-width:480px){
+            .trusted-logos{gap:18px}
+            .mockup-metric-row{grid-template-columns:1fr}
+            .replay-events{flex-wrap:wrap}
+        }
+        @media(prefers-reduced-motion:reduce){
+            .fade-up{opacity:1;transform:none;transition:none}
+            .badge-dot{animation:none}
+            .pricing-value.changing{opacity:1;transform:none}
+            .mockup-window{transform:none}
+            .replay-cursor{animation:none;top:70px;left:100px}
+            @keyframes panelIn{from{opacity:1;transform:none}}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL LOGIN -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="tutupModal()" aria-label="Tutup">&times;</button>
+            <div class="modal-brand">
+                <div class="brand-icon">Q</div>
+                Quantix
+            </div>
+            <h2 class="modal-title">Selamat datang</h2>
+            <p class="modal-subtitle">Masuk untuk mengakses dasbor Anda</p>
+
+            <div class="error-msg" id="modalError"></div>
+            <div class="success-msg" id="modalSuccess"></div>
+
+            <div class="form-group">
+                <label for="modalNama">Nama</label>
+                <input type="text" id="modalNama" placeholder="Nama Anda" autocomplete="name" />
+            </div>
+            <div class="form-group">
+                <label for="modalEmail">Email</label>
+                <input type="email" id="modalEmail" placeholder="anda@perusahaan.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+                <label for="modalPass">Kata Sandi</label>
+                <input type="password" id="modalPass" placeholder="Minimal 4 karakter" autocomplete="current-password" />
+            </div>
+
+            <button class="btn-modal-login" onclick="doLogin()">Masuk &rarr;</button>
+
+            <div class="demo-hint">
+                <strong>Demo:</strong> isi nama + email valid + kata sandi min. 4 karakter
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="nav-brand">
+                <span class="brand-icon">Q</span>
+                Quantix
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#fitur">Fitur</a></li>
+                <li><a href="#harga">Harga</a></li>
+                <li><a href="#" onclick="return false;">Dokumentasi</a></li>
+                <li><a href="#" onclick="return false;">Template</a></li>
+                <li class="nav-mobile-actions">
+                    <div id="authAreaMobile"></div>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authArea">
+                    <!-- diisi oleh welcome.js -->
+                </div>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-inner container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    Versi 2.0 Telah Hadir
+                </div>
+                <h1>Glory glory<br><span class="gradient-text">Man United</span></h1>
+                <p class="hero-desc">Kirim lebih cepat dengan analitik produk real-time, rekaman sesi, dan feature flag — semua dalam satu platform untuk tim engineering Anda.</p>
+                <div class="hero-cta">
+                    <a href="#" class="btn btn-primary btn-lg" onclick="bukaModal(); return false;">Mulai Gratis <span class="btn-arrow">&rarr;</span></a>
+                    <a href="#" class="btn btn-secondary btn-lg" onclick="return false;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Lihat Demo
+                    </a>
+                </div>
+                <div class="trusted-row">
+                    <p class="trusted-label">Dipercaya oleh 2.400+ tim</p>
+                    <div class="trusted-logos">
+                        <span class="trusted-logo"><span class="t-icon"></span> Vercel</span>
+                        <span class="trusted-logo"><span class="t-icon"></span> Linear</span>
+                        <span class="trusted-logo"><span class="t-icon"></span> Raycast</span>
+                        <span class="trusted-logo"><span class="t-icon"></span> Resend</span>
+                        <span class="trusted-logo"><span class="t-icon"></span> Supabase</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-mockup">
+                <div class="mockup-window">
+                    <div class="mockup-toolbar">
+                        <span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span>
+                    </div>
+                    <div class="mockup-body">
+                        <div class="mockup-metric-row">
+                            <div class="mockup-metric">
+                                <div class="mm-label">Tampilan Halaman</div>
+                                <div class="mm-value">24,8K</div>
+                                <div class="mm-change">+12,3%</div>
+                            </div>
+                            <div class="mockup-metric">
+                                <div class="mm-label">Konversi</div>
+                                <div class="mm-value">1.847</div>
+                                <div class="mm-change">+8,1%</div>
+                            </div>
+                            <div class="mockup-metric">
+                                <div class="mm-label">Tingkat Bouncing</div>
+                                <div class="mm-value">32%</div>
+                                <div class="mm-change">-4,2%</div>
+                            </div>
+                        </div>
+                        <div class="mockup-chart">
+                            <div class="mockup-chart-label">Trafik — 30 Hari Terakhir</div>
+                            <div class="chart-line">
+                                <svg viewBox="0 0 300 60" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="rgba(255,107,107,0.25)"/>
+                                            <stop offset="100%" stop-color="rgba(255,107,107,0)"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M0 50 Q20 45 40 40 T80 30 T120 35 T160 20 T200 25 T240 15 T280 10 T300 5 V60 H0Z" fill="url(#lineGrad)"/>
+                                    <path d="M0 50 Q20 45 40 40 T80 30 T120 35 T160 20 T200 25 T240 15 T280 10 T300 5" fill="none" stroke="#FF6B6B" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FITUR TABBED -->
+    <section class="section features-section" id="fitur">
+        <div class="container">
+            <div class="section-header fade-up">
+                <p class="section-label">Fitur</p>
+                <h2 class="section-title">Semua yang Anda butuhkan.<br>Tanpa yang tidak perlu.</h2>
+                <p class="section-desc">Toolkit analitik lengkap yang menggantikan lima alat sekaligus.</p>
+            </div>
+
+            <div class="feature-tabs fade-up" role="tablist">
+                <button class="feature-tab active" data-tab="dashboard" role="tab">Dasbor</button>
+                <button class="feature-tab" data-tab="funnels" role="tab">Funnel</button>
+                <button class="feature-tab" data-tab="sdk" role="tab">SDK</button>
+                <button class="feature-tab" data-tab="replay" role="tab">Rekaman Sesi</button>
+                <button class="feature-tab" data-tab="privacy" role="tab">Privasi</button>
+            </div>
+
+            <div class="feature-panels">
+                <!-- Panel 1: Dasbor -->
+                <div class="feature-panel active" data-panel="dashboard">
+                    <div class="feature-text">
+                        <div class="feat-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 A9 9 0 1 1 12 3"/><path d="M21 3v9h-9"/></svg>
+                        </div>
+                        <h3>Dasbor Real-Time</h3>
+                        <p>Pantau metrik Anda yang diperbarui secara langsung dengan latensi di bawah satu detik. Widget kustom, tata letak seret-dan-lepas, serta berbagi instan dengan tim.</p>
+                        <ul class="feature-bullets">
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Pembaruan data sub-detik</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Widget seret-dan-lepas</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Laporan email terjadwal</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="fv-toolbar"><span class="fv-dot"></span><span class="fv-dot"></span><span class="fv-dot"></span></div>
+                        <div class="fv-body">
+                            <div class="dash-metrics">
+                                <div class="dash-metric"><div class="dm-label">Pengguna Aktif</div><div class="dm-val">3.842</div><div class="dm-change up">+12,3%</div></div>
+                                <div class="dash-metric"><div class="dm-label">Konversi</div><div class="dm-val">12,4%</div><div class="dm-change up">+2,1%</div></div>
+                                <div class="dash-metric"><div class="dm-label">Churn</div><div class="dm-val">1,8%</div><div class="dm-change down">-0,4%</div></div>
+                            </div>
+                            <div class="dash-chart-area">
+                                <div class="dca-title">Pendapatan — 7 Hari Terakhir</div>
+                                <svg viewBox="0 0 400 80" preserveAspectRatio="none">
+                                    <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,107,107,0.2)"/><stop offset="100%" stop-color="rgba(255,107,107,0)"/></linearGradient></defs>
+                                    <path d="M0 60 C40 55 60 40 100 35 S160 30 200 20 S280 25 320 15 S380 10 400 5 V80 H0Z" fill="url(#areaGrad)"/>
+                                    <path d="M0 60 C40 55 60 40 100 35 S160 30 200 20 S280 25 320 15 S380 10 400 5" fill="none" stroke="#FF6B6B" stroke-width="2"/>
+                                    <circle cx="320" cy="15" r="4" fill="#FF6B6B" stroke="#1E1E24" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Funnel -->
+                <div class="feature-panel" data-panel="funnels">
+                    <div class="feature-text">
+                        <div class="feat-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                        </div>
+                        <h3>Analitik Funnel</h3>
+                        <p>Identifikasi persis di mana pengguna berhenti dan mengapa. Bangun funnel dalam hitungan detik dan korelasikan penurunan dengan segmen pengguna.</p>
+                        <ul class="feature-bullets">
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analisis penurunan visual</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Korelasi segmen</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Perbandingan historis</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="fv-toolbar"><span class="fv-dot"></span><span class="fv-dot"></span><span class="fv-dot"></span></div>
+                        <div class="fv-body">
+                            <div class="funnel-stages">
+                                <div class="funnel-stage"><div class="funnel-bar-wrap"><div class="funnel-bar-label"><span>Halaman Utama</span><span>12.480</span></div><div class="funnel-track"><div class="funnel-fill" style="width:100%"></div></div></div><div class="funnel-drop">&mdash;</div></div>
+                                <div class="funnel-stage"><div class="funnel-bar-wrap"><div class="funnel-bar-label"><span>Mulai Daftar</span><span>8.736</span></div><div class="funnel-track"><div class="funnel-fill" style="width:70%"></div></div></div><div class="funnel-drop">-30%</div></div>
+                                <div class="funnel-stage"><div class="funnel-bar-wrap"><div class="funnel-bar-label"><span>Email Terverifikasi</span><span>6.115</span></div><div class="funnel-track"><div class="funnel-fill amber" style="width:49%"></div></div></div><div class="funnel-drop">-30%</div></div>
+                                <div class="funnel-stage"><div class="funnel-bar-wrap"><div class="funnel-bar-label"><span>Onboarding Selesai</span><span>3.670</span></div><div class="funnel-track"><div class="funnel-fill amber" style="width:29%"></div></div></div><div class="funnel-drop">-40%</div></div>
+                                <div class="funnel-stage"><div class="funnel-bar-wrap"><div class="funnel-bar-label"><span>Aksi Pertama</span><span>2.569</span></div><div class="funnel-track"><div class="funnel-fill green" style="width:20.5%"></div></div></div><div class="funnel-drop">-30%</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 3: SDK -->
+                <div class="feature-panel" data-panel="sdk">
+                    <div class="feature-text">
+                        <div class="feat-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        </div>
+                        <h3>SDK Satu Baris</h3>
+                        <p>Cukup satu tag script atau paket npm. Auto-capture tampilan halaman, klik, dan event kustom langsung siap pakai.</p>
+                        <ul class="feature-bullets">
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Di bawah 4KB gzipped</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Autocapture tanpa konfigurasi</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> API TypeScript-first</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="fv-toolbar"><span class="fv-dot"></span><span class="fv-dot"></span><span class="fv-dot"></span></div>
+                        <div class="fv-body">
+                            <div class="code-block">
+                                <span class="c-comment">// Pasang: npm i @quantix/sdk</span><br><br>
+                                <span class="c-key">import</span> { Quantix } <span class="c-key">from</span> <span class="c-str">'@quantix/sdk'</span><br><br>
+                                <span class="c-key">const</span> qx = <span class="c-key">new</span> <span class="c-fn">Quantix</span>({<br>
+                                &nbsp;&nbsp;apiKey: <span class="c-str">'qx_live_k8x2...'</span>,<br>
+                                &nbsp;&nbsp;autocapture: <span class="c-key">true</span>,<br>
+                                &nbsp;&nbsp;sessionReplay: <span class="c-key">true</span>,<br>
+                                })<br><br>
+                                <span class="c-comment">// Lacak event kustom</span><br>
+                                qx.<span class="c-fn">track</span>(<span class="c-str">'checkout'</span>, {<br>
+                                &nbsp;&nbsp;value: <span class="c-num">49.99</span>,<br>
+                                &nbsp;&nbsp;plan: <span class="c-str">'pro'</span><br>
+                                })
+                            </div>
+                            <div class="code-output">
+                                <div class="co-label">Output</div>
+                                <div class="co-result"><span class="pulse-ring"></span>Event dilacak dalam 8ms — 200 OK</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 4: Rekaman Sesi -->
+                <div class="feature-panel" data-panel="replay">
+                    <div class="feature-text">
+                        <div class="feat-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <h3>Rekaman Sesi</h3>
+                        <p>Lihat persis apa yang dilihat pengguna Anda. Putar ulang sesi dengan akurasi piksel sempurna tanpa dampak performa pada aplikasi.</p>
+                        <ul class="feature-bullets">
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Pemutaran piksel sempurna</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tangkapan log konsol</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Deteksi rage click</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="fv-toolbar"><span class="fv-dot"></span><span class="fv-dot"></span><span class="fv-dot"></span></div>
+                        <div class="fv-body">
+                            <div class="replay-ui">
+                                <div class="replay-header">
+                                    <span class="rh-left"><span class="live-dot"></span> Merekam</span>
+                                    <span class="rh-time">02:34 / 05:12</span>
+                                </div>
+                                <div class="replay-viewport">
+                                    <div class="replay-page">
+                                        <div class="rp-nav"></div>
+                                        <div class="rp-hero-block"></div>
+                                        <div class="rp-hero-block"></div>
+                                        <div class="rp-hero-block"></div>
+                                        <span class="rp-btn-block"></span>
+                                        <div class="rp-grid"><div class="rp-card"></div><div class="rp-card"></div><div class="rp-card"></div></div>
+                                    </div>
+                                    <div class="replay-cursor"></div>
+                                </div>
+                                <div class="replay-timeline">
+                                    <span class="rt-play"><svg width="8" height="8" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+                                    <div class="rt-track"><div class="rt-progress"></div></div>
+                                </div>
+                            </div>
+                            <div class="replay-events">
+                                <span class="replay-event-tag"><span class="re-dot" style="background:var(--accent)"></span> klik</span>
+                                <span class="replay-event-tag"><span class="re-dot" style="background:var(--amber)"></span> gulir</span>
+                                <span class="replay-event-tag"><span class="re-dot" style="background:var(--rose)"></span> rage_click</span>
+                                <span class="replay-event-tag"><span class="re-dot" style="background:var(--green)"></span> input</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 5: Privasi -->
+                <div class="feature-panel" data-panel="privacy">
+                    <div class="feature-text">
+                        <div class="feat-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </div>
+                        <h3>Privasi Utama</h3>
+                        <p>Patuh GDPR dan CCPA sejak awal. Pelacakan tanpa cookie, penyembunyian PII otomatis, dan hosting EU tersedia.</p>
+                        <ul class="feature-bullets">
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tanpa banner cookie</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Residensi data EU</li>
+                            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Bersertifikat SOC 2 Type II</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="fv-toolbar"><span class="fv-dot"></span><span class="fv-dot"></span><span class="fv-dot"></span></div>
+                        <div class="fv-body">
+                            <div class="privacy-grid">
+                                <div class="privacy-card"><div class="pc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h4>Patuh GDPR</h4><p>Kepatuhan penuh dengan regulasi data Eropa</p></div>
+                                <div class="privacy-card"><div class="pc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><h4>Tanpa Cookie</h4><p>Pelacakan tanpa cookie — tanpa banner mengganggu</p></div>
+                                <div class="privacy-card"><div class="pc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h4>SOC 2 Type II</h4><p>Sertifikasi keamanan tingkat enterprise</p></div>
+                                <div class="privacy-card"><div class="pc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h4>Hosting EU</h4><p>Residensi data di Frankfurt, Jerman</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATISTIK -->
+    <section class="stats-strip">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item fade-up"><div class="stat-number" data-target="50" data-suffix="Jt+">0</div><div class="stat-label">Event dilacak setiap hari</div></div>
+                <div class="stat-item fade-up"><div class="stat-number" data-target="99.9" data-suffix="%" data-decimal="1">0</div><div class="stat-label">Jaminan uptime SLA</div></div>
+                <div class="stat-item fade-up"><div class="stat-number" data-target="2400" data-suffix="+" data-comma="true">0</div><div class="stat-label">Tim di seluruh dunia</div></div>
+                <div class="stat-item fade-up"><div class="stat-number" data-target="50" data-prefix="<" data-suffix="ms">0</div><div class="stat-label">Waktu respons kueri</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HARGA -->
+    <section class="section pricing-section" id="harga">
+        <div class="container">
+            <div class="section-header fade-up">
+                <p class="section-label">Harga</p>
+                <h2 class="section-title">Mulai gratis. Berkembang seiring pertumbuhan.</h2>
+                <p class="section-desc">Tanpa kartu kredit. Upgrade, downgrade, atau batalkan kapan saja.</p>
+            </div>
+
+            <div class="pricing-toggle-wrap fade-up">
+                <span class="pricing-toggle-label active" id="monthlyLabel">Bulanan</span>
+                <button class="pricing-toggle" id="pricingToggle" aria-label="Toggle periode harga"></button>
+                <span class="pricing-toggle-label" id="annualLabel">Tahunan</span>
+                <span class="pricing-save">Hemat 30%</span>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="pricing-card fade-up">
+                    <div class="pricing-plan-name">Pemula</div>
+                    <div class="pricing-amount"><span class="pricing-value free-label" data-monthly="GRATIS" data-annual="GRATIS">GRATIS</span></div>
+                    <div class="pricing-period">Gratis selamanya</div>
+                    <a href="#" class="btn btn-secondary" onclick="bukaModal(); return false;">Mulai Sekarang</a>
+                    <div class="pricing-divider"></div>
+                    <ul class="pricing-features">
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hingga 10K event/bulan</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 1 proyek</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analitik inti</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dukungan komunitas</li>
+                    </ul>
+                </div>
+                <div class="pricing-card featured fade-up">
+                    <span class="pricing-popular">Paling Populer</span>
+                    <div class="pricing-plan-name">Pro</div>
+                    <div class="pricing-amount"><span class="pricing-currency">$</span><span class="pricing-value" data-monthly="25" data-annual="17.50">25</span></div>
+                    <div class="pricing-period" data-monthly="per bulan" data-annual-total="210">per bulan</div>
+                    <a href="#" class="btn btn-primary" onclick="bukaModal(); return false;">Mulai Uji Coba Gratis</a>
+                    <div class="pricing-divider"></div>
+                    <ul class="pricing-features">
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hingga 1Jt event/bulan</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Proyek tak terbatas</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Rekaman sesi</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Feature flag &amp; A/B test</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dukungan prioritas</li>
+                    </ul>
+                </div>
+                <div class="pricing-card fade-up">
+                    <div class="pricing-plan-name">Skala</div>
+                    <div class="pricing-amount"><span class="pricing-currency">$</span><span class="pricing-value" data-monthly="120" data-annual="84">120</span></div>
+                    <div class="pricing-period" data-monthly="per bulan" data-annual-total="1.008">per bulan</div>
+                    <a href="#" class="btn btn-secondary" onclick="return false;">Hubungi Sales</a>
+                    <div class="pricing-divider"></div>
+                    <ul class="pricing-features">
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Event tak terbatas</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> SSO &amp; SAML</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Retensi kustom</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> CSM dedikasi</li>
+                        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Jaminan SLA</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BERLANGGANAN -->
+    <section class="subscribe-section">
+        <div class="container">
+            <div class="subscribe-inner fade-up">
+                <h2 class="section-title">Tetap terupdate</h2>
+                <p class="section-desc">Pembaruan produk, wawasan engineering, dan tanpa spam. Berhenti berlangganan kapan saja.</p>
+                <div class="subscribe-input-group">
+                    <input type="email" placeholder="anda@perusahaan.com" autocomplete="email">
+                    <button class="btn btn-primary">Berlangganan</button>
+                </div>
+                <div class="subscribe-meta">
+                    <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>6.200+ pelanggan</span>
+                    <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Digest bulanan</span>
+                    <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Berhenti kapan saja</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-row-links">
+                <a href="#fitur">Fitur</a><span class="footer-link-dot"></span>
+                <a href="#harga">Harga</a><span class="footer-link-dot"></span>
+                <a href="#" onclick="return false;">Dokumentasi</a><span class="footer-link-dot"></span>
+                <a href="#" onclick="return false;">Blog</a><span class="footer-link-dot"></span>
+                <a href="#" onclick="return false;">Mitra</a>
+            </div>
+            <div class="footer-row-bottom">
+                <p class="footer-copy">Hak Cipta &copy; 2026 Quantix. Desain: <a href="https://templatemo.com" target="_blank" rel="nofollow">TemplateMo</a></p>
+                <div class="footer-right">
+                    <div class="footer-socials">
+                        <a href="#" aria-label="X" onclick="return false;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                        <a href="#" aria-label="GitHub" onclick="return false;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a>
+                        <a href="#" aria-label="LinkedIn" onclick="return false;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+                    </div>
+                    <span class="separator"></span>
+                    <div class="footer-legal">
+                        <a href="#" onclick="return false;">Privasi</a>
+                        <a href="#" onclick="return false;">Syarat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    /* ========== welcome.js inline ========== */
+    function getUser(){try{return JSON.parse(localStorage.getItem('quantix_user'))}catch(e){return null}}
+
+    function doLogout(){
+        localStorage.removeItem('quantix_user');
+        updateAuthUI();
+    }
+
+    function bukaModal(){
+        if(getUser()){return}
+        document.getElementById('loginModal').classList.add('open');
+        setTimeout(()=>document.getElementById('modalNama').focus(),100);
+    }
+
+    function tutupModal(){
+        document.getElementById('loginModal').classList.remove('open');
+        document.getElementById('modalError').style.display='none';
+        document.getElementById('modalSuccess').style.display='none';
+    }
+
+    function showModalError(msg){
+        const el=document.getElementById('modalError');
+        el.textContent=msg; el.style.display='block';
+        document.getElementById('modalSuccess').style.display='none';
+    }
+    function showModalSuccess(msg){
+        const el=document.getElementById('modalSuccess');
+        el.textContent=msg; el.style.display='block';
+        document.getElementById('modalError').style.display='none';
+    }
+
+    function doLogin(){
+        const nama=document.getElementById('modalNama').value.trim();
+        const email=document.getElementById('modalEmail').value.trim();
+        const pass=document.getElementById('modalPass').value;
+        if(!nama) return showModalError('Nama tidak boleh kosong.');
+        if(!email||!email.includes('@')) return showModalError('Format email tidak valid.');
+        if(pass.length<4) return showModalError('Kata sandi minimal 4 karakter.');
+        const userData={nama,email,masukPada:new Date().toISOString()};
+        localStorage.setItem('quantix_user',JSON.stringify(userData));
+        showModalSuccess('Berhasil masuk! Selamat datang, '+nama+' 🎉');
+        setTimeout(()=>{tutupModal();updateAuthUI();},1400);
+    }
+
+    function updateAuthUI(){
+        const user=getUser();
+        ['authArea','authAreaMobile'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(!el) return;
+            if(user){
+                el.innerHTML=`<div class="auth-user-row">
+                    <div class="auth-avatar">${user.nama.charAt(0).toUpperCase()}</div>
+                    <span class="auth-username">${user.nama}</span>
+                    <button onclick="doLogout()" class="btn btn-ghost btn-sm">Keluar</button>
+                </div>`;
+            } else {
+                el.innerHTML=`<button onclick="bukaModal()" class="btn btn-primary">Masuk</button>`;
+            }
+        });
+    }
+
+    /* Tutup modal saat klik overlay */
+    document.getElementById('loginModal').addEventListener('click',function(e){
+        if(e.target===this) tutupModal();
+    });
+
+    /* Enter untuk login */
+    document.addEventListener('keydown',function(e){
+        if(e.key==='Enter'&&document.getElementById('loginModal').classList.contains('open')) doLogin();
+        if(e.key==='Escape') tutupModal();
+    });
+
+    /* ========== Navbar scroll ========== */
+    const navbar=document.getElementById('navbar');
+    window.addEventListener('scroll',()=>{
+        navbar.classList.toggle('scrolled',window.scrollY>50);
+    });
+
+    /* ========== Mobile nav toggle ========== */
+    const navToggle=document.getElementById('navToggle');
+    const navLinks=document.getElementById('navLinks');
+    navToggle.addEventListener('click',()=>{
+        navToggle.classList.toggle('active');
+        navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
+        navToggle.classList.remove('active');
+        navLinks.classList.remove('open');
+    }));
+
+    /* ========== Feature tabs ========== */
+    document.querySelectorAll('.feature-tab').forEach(tab=>{
+        tab.addEventListener('click',()=>{
+            document.querySelectorAll('.feature-tab').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.feature-panel').forEach(p=>p.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+        });
+    });
+
+    /* ========== Pricing toggle ========== */
+    let isAnnual=false;
+    const pricingToggle=document.getElementById('pricingToggle');
+    const monthlyLabel=document.getElementById('monthlyLabel');
+    const annualLabel=document.getElementById('annualLabel');
+
+    pricingToggle.addEventListener('click',()=>{
+        isAnnual=!isAnnual;
+        pricingToggle.classList.toggle('annual',isAnnual);
+        monthlyLabel.classList.toggle('active',!isAnnual);
+        annualLabel.classList.toggle('active',isAnnual);
+        document.querySelectorAll('.pricing-value').forEach(el=>{
+            el.classList.add('changing');
+            setTimeout(()=>{
+                const val=isAnnual?el.dataset.annual:el.dataset.monthly;
+                el.textContent=val;
+                el.classList.remove('changing');
+            },200);
+        });
+        document.querySelectorAll('.pricing-period[data-monthly]').forEach(el=>{
+            if(isAnnual){
+                const total=el.dataset.annualTotal;
+                el.innerHTML=total?`per bulan <span class="period-yearly">(Rp ditagih $${total}/tahun)</span>`:'per bulan';
+            } else {
+                el.textContent=el.dataset.monthly;
+            }
+        });
+    });
+
+    /* ========== Scroll animations ========== */
+    const observer=new IntersectionObserver(entries=>{
+        entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+    },{threshold:0.15});
+    document.querySelectorAll('.fade-up').forEach(el=>observer.observe(el));
+
+    /* ========== Counter animations ========== */
+    const counterObserver=new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+            if(!entry.isIntersecting) return;
+            const el=entry.target;
+            const target=parseFloat(el.dataset.target);
+            const suffix=el.dataset.suffix||'';
+            const prefix=el.dataset.prefix||'';
+            const decimal=parseInt(el.dataset.decimal||0);
+            const useComma=el.dataset.comma==='true';
+            const dur=1600,steps=60;
+            let step=0;
+            const inc=target/steps;
+            const timer=setInterval(()=>{
+                step++;
+                let val=step*inc;
+                if(step>=steps){val=target;clearInterval(timer)}
+                let display=decimal?val.toFixed(decimal):Math.floor(val);
+                if(useComma) display=parseFloat(display).toLocaleString('id-ID');
+                el.textContent=prefix+display+suffix;
+            },dur/steps);
+            counterObserver.unobserve(el);
+        });
+    },{threshold:0.5});
+    document.querySelectorAll('.stat-number').forEach(el=>counterObserver.observe(el));
+
+    /* ========== Init auth ========== */
+    updateAuthUI();
+    </script>
+</body>
+</html>
